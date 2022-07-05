@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class S3Config {
+public class AWSConfiguration {
 
     @Value("${aws.access_key_id}")
     private String accessKey;
@@ -28,6 +28,10 @@ public class S3Config {
 
     @Value("${aws.s3.region}")
     private String region;
+
+
+    @Value("${aws.s3.endpointUrl}")
+    private String endpointUrl;
 
     @Value("${aws.temporary.credentials.validity.duration}")
     private String credentialsValidityDuration;
@@ -86,4 +90,9 @@ public class S3Config {
                 .withCredentials(new AWSStaticCredentialsProvider(sessionCredentials)).build();
 
     }
+
+    public String getEndpointUrl() {
+        return endpointUrl;
+    }
+
 }
