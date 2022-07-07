@@ -1,8 +1,0 @@
-com\learning\aws\AWSSpringBootApplication.class
-com\learning\aws\controller\S3BucketController.class
-com\learning\aws\config\SNSConfiguration.class
-com\learning\aws\services\SNSService.class
-com\learning\aws\config\AWSConfiguration.class
-com\learning\aws\controller\SNSController.class
-com\learning\aws\services\S3BucketService.class
-com\learning\aws\common\AWSContentType.class
