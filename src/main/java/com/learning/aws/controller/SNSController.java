@@ -32,17 +32,32 @@ public class SNSController {
         return ResponseEntity.ok(topic);
     }
 
-    @RequestMapping(value = "/subscription/topic/{topicName}/phone/{phone}",method = RequestMethod.POST)
-    public ResponseEntity createSubscription(@PathVariable("topicName") String topicName, @PathVariable("phone")  String phone)
+    @RequestMapping(value = "/phoneSubscription/topic/{topicName}/phone/{phone}",method = RequestMethod.POST)
+    public ResponseEntity createPhoneSubscription(@PathVariable("topicName") String topicName, @PathVariable("phone")  String phone)
     {
         int phoneSubscription = snsService.createPhoneSubscription(topicName, phone);
         return ResponseEntity.ok(phoneSubscription);
     }
 
-    @RequestMapping(value = "/publish/topic/{topicName}/message/{message}/phone/{phone}/",method = RequestMethod.POST)
-    public ResponseEntity publishMessage(@PathVariable("topicName") String topicName,  @PathVariable("message")  String message, @PathVariable("phone")  String phone)
+    @RequestMapping(value = "/emailSubscription/topic/{topicName}/email/{email}",method = RequestMethod.POST)
+    public ResponseEntity createEmailSubscription(@PathVariable("topicName") String topicName, @PathVariable("email")  String email)
     {
-        int publishMessage = snsService.publishMessage(topicName, message,phone);
+        int emailSubscription = snsService.createEmailSubscription(topicName, email);
+        return ResponseEntity.ok(emailSubscription);
+    }
+
+    @RequestMapping(value = "/publishSMS/topic/{topicName}/message/{message}/phone/{phone}/",method = RequestMethod.POST)
+    public ResponseEntity publishMessageToPhone(@PathVariable("topicName") String topicName,  @PathVariable("message")  String message, @PathVariable("phone")  String phone)
+    {
+        int publishMessage = snsService.publishMessageToPhone(topicName, message,phone);
+        return ResponseEntity.ok(publishMessage);
+    }
+
+
+    @RequestMapping(value = "/publishEmail/topic/{topicName}/message/{message}/email/{email}/",method = RequestMethod.POST)
+    public ResponseEntity publishMessageToEmail(@PathVariable("topicName") String topicName,  @PathVariable("message")  String message, @PathVariable("email")  String email)
+    {
+        int publishMessage = snsService.publishEmail(topicName, message,email);
         return ResponseEntity.ok(publishMessage);
     }
 

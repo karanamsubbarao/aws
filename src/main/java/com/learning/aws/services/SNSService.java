@@ -45,7 +45,7 @@ public class SNSService {
         return result.sdkHttpResponse().statusCode();
     }
 
-    public int publishMessage(String topicArn, String message,String phoneNumber) {
+    public int publishMessageToPhone(String topicArn, String message,String phoneNumber) {
 
         PublishRequest request = PublishRequest.builder()
                 .message(message)
@@ -57,4 +57,26 @@ public class SNSService {
         return result.sdkHttpResponse().statusCode();
     }
 
+    public int createEmailSubscription(String topicArn, String email) {
+        SubscribeRequest request = SubscribeRequest.builder()
+                .protocol("email")
+                .endpoint(email)
+                .returnSubscriptionArn(true)
+                .topicArn(topicArn)
+                .build();
+        SubscribeResponse result = snsClient.subscribe(request);
+        return result.sdkHttpResponse().statusCode();
+    }
+
+    public int publishEmail(String topicArn,String message, String email) {
+        PublishRequest request = PublishRequest.builder()
+                .subject(message)
+                .message(message)
+                .topicArn(topicArn)
+                .build();
+
+        PublishResponse result = snsClient.publish(request);
+        System.out.println(result.messageId() + " Message sent. Status was " + result.sdkHttpResponse().statusCode());
+        return result.sdkHttpResponse().statusCode();
+    }
 }
