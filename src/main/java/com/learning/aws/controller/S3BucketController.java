@@ -1,6 +1,5 @@
 package com.learning.aws.controller;
 
-import com.amazonaws.services.s3.model.Bucket;
 import com.learning.aws.common.AWSContentType;
 import com.learning.aws.services.S3BucketService;
 import org.apache.commons.lang3.StringUtils;
@@ -11,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.services.s3.model.Bucket;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
@@ -23,7 +23,7 @@ public class S3BucketController {
     private S3BucketService s3Service;
 
 
-    @RequestMapping(value = "Hello world",method = RequestMethod.GET)
+    @RequestMapping(value = "/hello",method = RequestMethod.GET)
     public ResponseEntity<String> helloWorld()
     {
         return  new ResponseEntity<String>("hello world", HttpStatus.OK);
@@ -32,8 +32,8 @@ public class S3BucketController {
     @RequestMapping(value = "list",method = RequestMethod.GET)
     public ResponseEntity<List<Bucket>> listBuckets()
     {
-        List<Bucket> buckets = s3Service.listBuckets();
-        return  new ResponseEntity<List<Bucket>>(buckets, HttpStatus.OK);
+        List<Bucket> allBuckets = s3Service.listBuckets();
+        return  new ResponseEntity<List<Bucket>>(allBuckets, HttpStatus.OK);
     }
 
 
@@ -65,8 +65,8 @@ public class S3BucketController {
     }
 
 
-    @RequestMapping(value = "download/bucket/{bucket}/file/{file}",method = RequestMethod.POST, produces = { MediaType.MULTIPART_FORM_DATA_VALUE })
-    public ResponseEntity<byte[]> uploadObject(@PathVariable("bucket") String bucket,String filename)
+    /*@RequestMapping(value = "download/bucket/{bucket}/file/{file}",method = RequestMethod.POST, produces = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<byte[]> downloadFile(@PathVariable("bucket") String bucket,String filename)
     {
         ByteArrayOutputStream downloadInputStream = s3Service.downloadFile(bucket, filename);
         return ResponseEntity.ok()
@@ -74,10 +74,10 @@ public class S3BucketController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .body(downloadInputStream.toByteArray());
     }
-
+*/
     @RequestMapping(value = "purge/bucket/{bucket}/file/{file}",method = RequestMethod.DELETE)
     public ResponseEntity purgeObject(@PathVariable("bucket") String bucket,@PathVariable("file")  String file) {
-        s3Service.purgeObject(bucket, file);
+        s3Service.deleteFileFromS3Bucket(bucket, file);
         return  new ResponseEntity<>(HttpStatus.OK);
     }
 

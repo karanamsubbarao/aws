@@ -1,19 +1,25 @@
 package com.learning.aws.services;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.*;
 import com.learning.aws.config.AWSConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.core.sync.ResponseTransformer;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.*;
 
 import javax.annotation.PostConstruct;
 import java.io.*;
+import java.net.URL;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class S3BucketService {
@@ -24,40 +30,39 @@ public class S3BucketService {
     @Autowired
     private AWSConfiguration s3Config;
 
-    private AmazonS3 s3client;
+    private S3Client s3client;
 
     @PostConstruct
     private void initializeAmazon() {
-        this.s3client = s3Config.sessionCredentials();
+        this.s3client = s3Config.s3client();
     }
 
     public List<Bucket> listBuckets() {
-        return s3client.listBuckets();
+        return s3client.listBuckets().buckets();
     }
 
     public List<Bucket> createBucket(String name) {
-        s3client.createBucket(name);
-        return s3client.listBuckets();
+        CreateBucketRequest bucketRequest = CreateBucketRequest.builder().bucket(name).build();
+        s3client.createBucket(bucketRequest);
+        return listBuckets();
     }
 
 
     public List<Bucket> deleteBucket(String name) {
-        s3client.deleteBucket(name);
-        return s3client.listBuckets();
+        DeleteBucketRequest request = DeleteBucketRequest.builder().bucket(name).build();
+        s3client.deleteBucket(request);
+        return listBuckets();
     }
 
     public String uploadFile(String bucket,MultipartFile multipartFile) {
-        String fileUrl = "";
         try {
             File file = convertMultiPartToFile(multipartFile);
             String fileName = multipartFile.getOriginalFilename();
-            fileUrl = s3Config.getEndpointUrl() + "/" + bucket + "/" + fileName;
-            uploadFileTos3bucket(bucket,fileName, file);
-            file.delete();
+            return  uploadFileTos3bucket(bucket,fileName, file);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return fileUrl;
+        return null;
     }
 
 
@@ -69,50 +74,65 @@ public class S3BucketService {
         return convFile;
     }
 
-    private void uploadFileTos3bucket(String bucket,String fileName, File file) {
-        s3client.putObject(new PutObjectRequest(bucket, fileName, file));
+    private String uploadFileTos3bucket(String bucket,String objectKey, File file) {
+
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("x-amz-meta-myVal", "test");
+
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(objectKey)
+                .metadata(metadata)
+                .build();
+
+        PutObjectResponse response = s3client.putObject(putObjectRequest,
+                RequestBody.fromBytes(getObjectFile(file)));
+        logger.info("putObjectResult = " + response);
+        final URL reportUrl = s3client.utilities().getUrl(GetUrlRequest.builder().bucket(bucket).key(objectKey).build());
+        logger.info("reportUrl = " + reportUrl);
+        return reportUrl.toString();
     }
 
-    public String deleteFileFromS3Bucket(String bucket,String fileUrl) {
-        String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
-        s3client.deleteObject(new DeleteObjectRequest(bucket, fileName));
-        return "Successfully deleted";
+    public String deleteFileFromS3Bucket(String bucket,String objectKey) {
+
+        ArrayList<ObjectIdentifier> toDelete = new ArrayList<>();
+        toDelete.add(ObjectIdentifier.builder().key(objectKey).build());
+
+        DeleteObjectsRequest request = DeleteObjectsRequest.builder()
+                .bucket(bucket)
+                .delete(Delete.builder().objects(toDelete).build())
+                .build();
+        DeleteObjectsResponse deleteObjectsResponse = s3client.deleteObjects(request);
+        return deleteObjectsResponse.toString();
     }
 
 
-    public ByteArrayOutputStream  downloadFile(String bucket, String file) {
-        try
-        {
-            S3Object s3object = s3client.getObject(new GetObjectRequest(bucket, file));
+    public void  downloadFile(String bucket, String objectKey, Path destination) {
 
-            InputStream is = s3object.getObjectContent();
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            int len;
-            byte[] buffer = new byte[4096];
-            while ((len = is.read(buffer, 0, buffer.length)) != -1) {
-                outputStream.write(buffer, 0, len);
+    }
+
+    private static byte[] getObjectFile(File file) {
+
+        FileInputStream fileInputStream = null;
+        byte[] bytesArray = null;
+
+        try {
+            bytesArray = new byte[(int) file.length()];
+            fileInputStream = new FileInputStream(file);
+            fileInputStream.read(bytesArray);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fileInputStream != null) {
+                try {
+                    fileInputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-            return outputStream;
-        } catch (IOException ioException) {
-            logger.error("IOException: " + ioException.getMessage());
-        } catch (AmazonServiceException serviceException) {
-            logger.info("AmazonServiceException Message:    " + serviceException.getMessage());
-            throw serviceException;
-        } catch (AmazonClientException clientException) {
-            logger.info("AmazonClientException Message: " + clientException.getMessage());
-            throw clientException;
         }
-        return null;
+        return bytesArray;
     }
 
-
-    public void  purgeObject(String bucket, String file) {
-        try
-        {
-            s3client.deleteObject(bucket, file);
-        }catch (Exception ex)
-        {
-            ex.printStackTrace();
-        }
-    }
 }

@@ -1,0 +1,8 @@
+D:\AWS-Exam\aws\src\main\java\com\learning\aws\AWSSpringBootApplication.java
+D:\AWS-Exam\aws\src\main\java\com\learning\aws\config\AWSConfiguration.java
+D:\AWS-Exam\aws\src\main\java\com\learning\aws\services\SNSService.java
+D:\AWS-Exam\aws\src\main\java\com\learning\aws\controller\SNSController.java
+D:\AWS-Exam\aws\src\main\java\com\learning\aws\config\SNSConfiguration.java
+D:\AWS-Exam\aws\src\main\java\com\learning\aws\controller\S3BucketController.java
+D:\AWS-Exam\aws\src\main\java\com\learning\aws\services\S3BucketService.java
+D:\AWS-Exam\aws\src\main\java\com\learning\aws\common\AWSContentType.java
